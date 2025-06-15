@@ -1,0 +1,82 @@
+:root {
+    --lapis-lazuli: #045288;
+    --columbia-blue: #C7DFED;
+    --white: #ffffff;
+    --black: #000000;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--white);
+    color: var(--black);
+  }
+  
+  header {
+    background-color: var(--lapis-lazuli);
+    padding: 2rem 1rem;
+    color: var(--white);
+    text-align: center;
+  }
+  
+  .header-content h1 {
+    margin: 0;
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+    color: var(--columbia-blue);
+  }
+  
+  main {
+    flex: 1;
+    padding: 2rem 1rem;
+    max-width: 700px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  
+  .intro h2 {
+    color: var(--lapis-lazuli);
+    font-size: 1.8rem;
+  }
+  
+  .intro p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin: 1rem 0 2rem;
+  }
+  
+  .cta-button {
+    display: inline-block;
+    background-color: var(--lapis-lazuli);
+    color: var(--white);
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  .cta-button:hover {
+    background-color: #033e6b;
+  }
+  
+  footer {
+    background-color: var(--columbia-blue);
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+    margin-top: 4rem;
+    color: var(--lapis-lazuli);
+  }
+  
