@@ -1,7 +1,7 @@
 ## 🔧 Setup & Installation
 1️⃣ Clone the Repository
 ```bash
-git clone ...
+git clone https://github.com/guzmanvitar/ccg-platform.git
 cd yt-style-retaining-translator
 ```
 
