@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panthera onca — Genetic Assignment</title>
+  <link rel="stylesheet" href="{% static 'inference/style.css' %}">
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>Panthera onca Tools</h1>
+      <p class="subtitle">Genomic assignment tools for jaguar conservation</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Choose Your Action</h2>
+      <p>
+        This page provides tools tailored for <strong>Panthera onca</strong> (Jaguar).
+        Whether you're a researcher, conservationist, or student, you can:
+      </p>
+      <ul>
+        <li>Upload new genetic data for comparison and assignment</li>
+        <li>Run inference on existing SNP data</li>
+      </ul>
+
+      <div class="action-buttons">
+        <a class="cta-button" href="#">Upload Genetic Data</a>
+        <a class="cta-button secondary" href="#">Run Geographic Inference</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 PUCRS — Laboratório de Biologia Genômica e Molecular</p>
+  </footer>
+</body>
+</html>
