@@ -1,5 +1,5 @@
 /* ========================================
-   Color Palette
+  Color Palette
 ======================================== */
 :root {
   --lapis-lazuli: #045288;
@@ -9,7 +9,7 @@
 }
 
 /* ========================================
-   Base Layout
+  Base Layout
 ======================================== */
 html, body {
   height: 100%;
@@ -17,15 +17,23 @@ html, body {
 }
 
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "IBM Plex Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--white);
   color: var(--black);
   display: flex;
   flex-direction: column;
 }
 
+/* Monospace styling for filenames/SNPs */
+code, .monospace {
+  font-family: "Courier New", Courier, monospace;
+  background-color: #f3f3f3;
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+}
+
 /* ========================================
-   Header
+  Header
 ======================================== */
 header {
   background-color: var(--lapis-lazuli);
@@ -46,7 +54,7 @@ header {
 }
 
 /* ========================================
-   Main Content
+  Main Content
 ======================================== */
 main {
   flex: 1;
@@ -58,7 +66,21 @@ main {
 
 .intro h2 {
   color: var(--lapis-lazuli);
-  font-size: 1.8rem;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  position: relative;
+  text-align: center;
+}
+
+.intro h2::after {
+  content: "";
+  display: block;
+  width: 50px;
+  height: 2px;
+  background-color: var(--lapis-lazuli);
+  margin: 0.5rem auto 1.5rem;
 }
 
 .intro p {
@@ -68,7 +90,19 @@ main {
 }
 
 /* ========================================
-   Lists
+  Card Layout (Optional)
+======================================== */
+.card {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ========================================
+  Lists
 ======================================== */
 .intro ul {
   text-align: left;
@@ -83,7 +117,7 @@ main {
 }
 
 /* ========================================
-   Buttons
+  Buttons
 ======================================== */
 .cta-button {
   display: inline-block;
@@ -124,7 +158,7 @@ main {
 }
 
 /* ========================================
-   Footer
+  Footer
 ======================================== */
 footer {
   background-color: var(--columbia-blue);
