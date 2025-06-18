@@ -40,12 +40,16 @@
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
       <h3>Upload Genetic Data</h3>
-        <form method="post" enctype="multipart/form-data" action="{% url 'upload_data' %}">
-          {% csrf_token %}
-          <input type="file" name="file" accept=".vcf,.txt" required class="file-input">
-          <br><br>
-          <button type="submit" class="cta-button">Submit</button>
-        </form>
+      <form id="uploadForm" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="species" value="panthera-onca">
+        <input type="file" name="file" accept=".vcf,.fasta,.fastq,.txt" required class="file-input">
+        <br><br>
+        <button type="submit" class="cta-button">Submit</button>
+      </form>
+      <p id="uploadSuccessMsg" style="display:none; color: green; font-weight: bold; margin-top: 1rem;">
+        ✅ Upload successful! Redirecting...
+      </p>
     </div>
   </div>
 
@@ -56,11 +60,36 @@
   <script>
     function openModal() {
       document.getElementById("uploadModal").classList.remove("hidden");
+      document.getElementById("uploadSuccessMsg").style.display = "none";
     }
 
     function closeModal() {
       document.getElementById("uploadModal").classList.add("hidden");
     }
+
+    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      const response = await fetch("{% url 'upload_data' %}", {
+        method: "POST",
+        headers: { 'X-CSRFToken': csrfToken },
+        body: formData
+      });
+
+      if (response.ok) {
+        document.getElementById("uploadSuccessMsg").style.display = "block";
+        setTimeout(() => {
+          closeModal();
+          window.location.href = "{% url 'jaguar_tools' %}";
+        }, 2000);
+      } else {
+        const result = await response.json();
+        alert("Upload failed: " + (result.errors || "Unknown error"));
+      }
+    });
   </script>
 </body>
 </html>
