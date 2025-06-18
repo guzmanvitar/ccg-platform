@@ -33,6 +33,27 @@
         <a class="cta-button secondary" href="#">Run Geographic Inference</a>
       </div>
     </section>
+
+    <!-- Spacer for vertical separation -->
+    <div style="margin-top: 3rem;"></div>
+
+    {% if uploaded_files %}
+    <section class="uploaded-files card">
+      <h3>Your Uploaded Files</h3>
+      <ul>
+        {% for file in uploaded_files %}
+          <li>
+            <strong>{{ file.name }}</strong> ({{ file.format }})
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% else %}
+    <section class="uploaded-files card">
+      <h3>Your Uploaded Files</h3>
+      <p>No files uploaded yet.</p>
+    </section>
+    {% endif %}
   </main>
 
   <!-- Upload Modal -->

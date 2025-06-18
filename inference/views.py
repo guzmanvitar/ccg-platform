@@ -10,10 +10,6 @@ def home(request):
     return render(request, "inference/home.html")
 
 
-def jaguar_tools(request):
-    return render(request, "inference/jaguar_tools.html")
-
-
 def upload_data(request):
     if request.method == "POST":
         form = UploadFileForm(request.POST, request.FILES)
@@ -44,3 +40,29 @@ def handle_uploaded_file(file, species, file_format, username):
     with file_path.open("wb+") as destination:
         for chunk in file.chunks():
             destination.write(chunk)
+
+
+def jaguar_tools(request):
+    base_path = Path.home() / "seafile_drive" / "panthera-onca"
+    user = "user"
+    uploaded_files = []
+
+    for fmt in ["vcf", "fasta", "fastq", "txt"]:
+        folder = base_path / fmt / user
+        if folder.exists():
+            for f in folder.iterdir():
+                if f.is_file():
+                    uploaded_files.append(
+                        {
+                            "name": f.name,
+                            "format": fmt,
+                            "path": f,
+                            "modified": f.stat().st_mtime,
+                        }
+                    )
+
+    uploaded_files.sort(key=lambda x: x["modified"], reverse=True)
+
+    return render(
+        request, "inference/jaguar_tools.html", {"uploaded_files": uploaded_files}
+    )
