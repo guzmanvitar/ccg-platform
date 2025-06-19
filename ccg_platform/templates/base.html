@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Carnivore Conservation Genomics{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'inference/style.css' %}">
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1><a href="/" style="color: inherit; text-decoration: none;">Carnivore Conservation Genomics</a></h1>
+      <p class="subtitle">A conservation research project by PUCRS's genomics lab</p>
+    </div>
+  </header>
+
+  <main>
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <footer>
+    <p>© 2025 PUCRS — Laboratório de Biologia Genômica e Molecular</p>
+  </footer>
+</body>
+</html>

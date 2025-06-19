@@ -61,7 +61,7 @@ ROOT_URLCONF = "ccg_platform.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "ccg_platform" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
