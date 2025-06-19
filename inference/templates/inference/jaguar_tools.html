@@ -29,14 +29,88 @@
       </ul>
 
       <div class="action-buttons">
-        <a class="cta-button" href="#">Upload Genetic Data</a>
+        <a class="cta-button" href="#" onclick="openModal()">Upload Genetic Data</a>
         <a class="cta-button secondary" href="#">Run Geographic Inference</a>
       </div>
     </section>
+
+    <!-- Spacer for vertical separation -->
+    <div style="margin-top: 3rem;"></div>
+
+    {% if uploaded_files %}
+    <section class="uploaded-files card">
+      <h3>Your Uploaded Files</h3>
+      <ul>
+        {% for file in uploaded_files %}
+          <li>
+            <strong>{{ file.name }}</strong> ({{ file.format }})
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% else %}
+    <section class="uploaded-files card">
+      <h3>Your Uploaded Files</h3>
+      <p>No files uploaded yet.</p>
+    </section>
+    {% endif %}
   </main>
+
+  <!-- Upload Modal -->
+  <div id="uploadModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3>Upload Genetic Data</h3>
+      <form id="uploadForm" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="species" value="panthera-onca">
+        <input type="file" name="file" accept=".vcf,.fasta,.fastq,.txt" required class="file-input">
+        <br><br>
+        <button type="submit" class="cta-button">Submit</button>
+      </form>
+      <p id="uploadSuccessMsg" style="display:none; color: green; font-weight: bold; margin-top: 1rem;">
+        ✅ Upload successful! Redirecting...
+      </p>
+    </div>
+  </div>
 
   <footer>
     <p>© 2025 PUCRS — Laboratório de Biologia Genômica e Molecular</p>
   </footer>
+
+  <script>
+    function openModal() {
+      document.getElementById("uploadModal").classList.remove("hidden");
+      document.getElementById("uploadSuccessMsg").style.display = "none";
+    }
+
+    function closeModal() {
+      document.getElementById("uploadModal").classList.add("hidden");
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      const response = await fetch("{% url 'upload_data' %}", {
+        method: "POST",
+        headers: { 'X-CSRFToken': csrfToken },
+        body: formData
+      });
+
+      if (response.ok) {
+        document.getElementById("uploadSuccessMsg").style.display = "block";
+        setTimeout(() => {
+          closeModal();
+          window.location.href = "{% url 'jaguar_tools' %}";
+        }, 2000);
+      } else {
+        const result = await response.json();
+        alert("Upload failed: " + (result.errors || "Unknown error"));
+      }
+    });
+  </script>
 </body>
 </html>

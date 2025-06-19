@@ -155,6 +155,8 @@ main {
   justify-content: center;
   margin-top: 2rem;
   flex-wrap: wrap;
+  margin-bottom: 3rem;
+
 }
 
 /* ========================================
@@ -167,4 +169,69 @@ footer {
   font-size: 0.9rem;
   margin-top: 4rem;
   color: var(--lapis-lazuli);
+}
+
+/* ========================================
+  Modal Upload Dialog
+======================================== */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);  /* semi-transparent backdrop */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hidden {
+  display: none;
+}
+
+.modal-content {
+  background-color: var(--white);
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 0 10px rgba(0,0,0,0.25);
+  position: relative;
+  text-align: center;
+}
+
+.modal .close {
+  position: absolute;
+  right: 1rem;
+  top: 0.5rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--lapis-lazuli);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  font-size: 1.4rem;
+  color: var(--lapis-lazuli);
+}
+
+.modal-content input[type="file"] {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.file-input {
+  font-size: 1rem;
+  padding: 0.4rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+/* ========================================
+  Uploaded Files
+======================================== */
+.uploaded-files {
+  margin-top: 0;
 }
