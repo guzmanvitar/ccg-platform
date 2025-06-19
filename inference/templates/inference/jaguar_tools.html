@@ -13,30 +13,44 @@
     <li>Run inference on existing SNP data</li>
   </ul>
 
-  <div class="action-buttons">
-    <a class="cta-button" href="#" onclick="openModal()">Upload Genetic Data</a>
-    <a class="cta-button secondary" href="#">Run Geographic Inference</a>
-  </div>
+  {% if user.is_authenticated %}
+    <div class="action-buttons">
+      <a class="cta-button" href="#" onclick="openModal()">Upload Genetic Data</a>
+      <a class="cta-button secondary" href="#">Run Geographic Inference</a>
+    </div>
+  {% else %}
+    <div class="action-buttons">
+      <a class="cta-button" href="/accounts/login/?next={% url 'jaguar_tools' %}">Log in to upload data</a>
+      <a class="cta-button secondary" href="#">Run Geographic Inference</a>
+    </div>
+    <div class="card" style="max-width: 500px; margin: 2rem auto; text-align: center;">
+      <p><strong>You must be logged in to upload or view your files.</strong></p>
+      <a class="cta-button" href="/accounts/login/?next={% url 'jaguar_tools' %}">Log In</a>
+      <a class="cta-button secondary" href="/accounts/signup/">Sign Up</a>
+    </div>
+  {% endif %}
 </section>
 
 <div style="margin-top: 3rem;"></div>
 
-{% if uploaded_files %}
-<section class="uploaded-files card">
-  <h3>Your Uploaded Files</h3>
-  <ul>
-    {% for file in uploaded_files %}
-      <li>
-        <strong>{{ file.name }}</strong> ({{ file.format }})
-      </li>
-    {% endfor %}
-  </ul>
-</section>
-{% else %}
-<section class="uploaded-files card">
-  <h3>Your Uploaded Files</h3>
-  <p>No files uploaded yet.</p>
-</section>
+{% if user.is_authenticated %}
+  {% if uploaded_files %}
+  <section class="uploaded-files card">
+    <h3>Your Uploaded Files</h3>
+    <ul>
+      {% for file in uploaded_files %}
+        <li>
+          <strong>{{ file.name }}</strong> ({{ file.format }})
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <section class="uploaded-files card">
+    <h3>Your Uploaded Files</h3>
+    <p>No files uploaded yet.</p>
+  </section>
+  {% endif %}
 {% endif %}
 
 <!-- Upload Modal -->
@@ -67,8 +81,15 @@
     document.getElementById("uploadModal").classList.add("hidden");
   }
 
+  // Set isAuthenticated from Django context
+  var isAuthenticated = ("{{ user.is_authenticated|yesno:'true,false' }}" === "true");
+
   document.getElementById("uploadForm").addEventListener("submit", async function(e) {
     e.preventDefault();
+    if (!isAuthenticated) {
+      window.location.href = "/accounts/login/?next={% url 'jaguar_tools' %}";
+      return;
+    }
     const form = e.target;
     const formData = new FormData(form);
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -87,7 +108,11 @@
       }, 2000);
     } else {
       const result = await response.json();
-      alert("Upload failed: " + (result.errors || "Unknown error"));
+      if (result.login_url) {
+        window.location.href = result.login_url;
+      } else {
+        alert("Upload failed: " + (result.errors || "Unknown error"));
+      }
     }
   });
 </script>

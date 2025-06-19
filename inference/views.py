@@ -11,10 +11,19 @@ def home(request):
 
 
 def upload_data(request):
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {
+                "success": False,
+                "errors": "You must be logged in to upload files.",
+                "login_url": "/accounts/login/",
+            },
+            status=403,
+        )
     if request.method == "POST":
         form = UploadFileForm(request.POST, request.FILES)
         species = request.POST.get("species", "unknown_species")
-        username = "user"  # placeholder
+        username = request.user.email
 
         if form.is_valid():
             file = request.FILES["file"]
@@ -43,8 +52,10 @@ def handle_uploaded_file(file, species, file_format, username):
 
 
 def jaguar_tools(request):
+    if not request.user.is_authenticated:
+        return render(request, "inference/jaguar_tools.html", {"uploaded_files": []})
     base_path = Path.home() / "seafile_drive" / "panthera-onca"
-    user = "user"
+    user = request.user.email
     uploaded_files = []
 
     for fmt in ["vcf", "fasta", "fastq", "txt"]:
