@@ -10,9 +10,24 @@
 </head>
 <body>
   <header>
-    <div class="header-content">
+    <div class="header-content" style="position: relative;">
       <h1><a href="/" style="color: inherit; text-decoration: none;">Carnivore Conservation Genomics</a></h1>
       <p class="subtitle">A conservation research project by PUCRS's genomics lab</p>
+      <div class="user-access{% if user.is_authenticated %} authenticated{% endif %}">
+        {% if user.is_authenticated %}
+          <div class="user-actions">
+            <a href="{% url 'account_email' %}" class="cta-button secondary">Account</a>
+            <form method="post" action="{% url 'account_logout' %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="cta-button">Sign Out</button>
+            </form>
+          </div>
+          <span class="user-email">{{ user.email }}</span>
+        {% else %}
+          <a href="{% url 'account_login' %}" class="cta-button">Log In</a>
+          <a href="{% url 'account_signup' %}" class="cta-button secondary">Sign Up</a>
+        {% endif %}
+      </div>
     </div>
   </header>
 
