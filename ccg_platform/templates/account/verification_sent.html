@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Verification Email Sent{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width: 500px; margin: 2rem auto;">
+  <h2 style="text-align: center;">Check Your Email</h2>
+
+  <div style="text-align: center; margin-bottom: 1.5rem;">
+    <p>We've sent a verification email to your address.</p>
+  </div>
+
+  <div style="text-align: center; margin-bottom: 1.5rem;">
+    <p>Please check your email and click the verification link to complete your registration.</p>
+    <p><small>If you don't see the email, check your spam folder.</small></p>
+  </div>
+
+  <div style="text-align: center;">
+    <a href="{% url 'account_login' %}" class="cta-button">Back to Login</a>
+  </div>
+
+  <p style="text-align: center; margin-top: 1.5rem;">
+    <small>Didn't receive the email? <a href="{% url 'account_email' %}">Request a new one</a></small>
+  </p>
+</section>
+{% endblock %}

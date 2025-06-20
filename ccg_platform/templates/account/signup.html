@@ -11,6 +11,9 @@
     {{ form.as_p }}
     <button type="submit" class="cta-button">Sign Up</button>
   </form>
+  <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #666;">
+    <small>After signing up, you'll receive a verification email. Please check your email and click the verification link to complete your registration.</small>
+  </p>
   <p style="text-align: center; margin-top: 1rem;">
     Already have an account?
     <a href="{% url 'account_login' %}">Log in</a>

@@ -17,9 +17,29 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import TemplateView
+
+
+def verification_sent_view(request):
+    """Custom view for email verification sent page"""
+    context = {}
+    if request.user.is_authenticated:
+        context["email"] = request.user.email
+    elif "email" in request.session:
+        context["email"] = request.session["email"]
+    return TemplateView.as_view(template_name="account/verification_sent.html")(
+        request, **context
+    )
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("inference.urls")),
+    # Override allauth verification sent view
+    path(
+        "accounts/confirm-email/",
+        verification_sent_view,
+        name="account_email_verification_sent",
+    ),
     path("accounts/", include("allauth.urls")),
 ]

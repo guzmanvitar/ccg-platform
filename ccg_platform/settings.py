@@ -118,6 +118,30 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 
+# Email confirmation settings
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
+ACCOUNT_EMAIL_CONFIRMATION_HMAC = True
+ACCOUNT_RATE_LIMITS = {
+    "confirm_email": "5/m",
+    "reset_password": "5/m",
+    "reset_password_email": "5/m",
+    "signup": "5/m",
+}
+
+# Custom allauth adapter
+ACCOUNT_ADAPTER = "inference.adapters.CustomAccountAdapter"
+
+# Email settings for production (you'll need to configure these)
+# EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP server
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
+# DEFAULT_FROM_EMAIL = 'your-email@gmail.com'
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 

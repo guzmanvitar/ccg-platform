@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Email Verification Required{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width: 500px; margin: 2rem auto;">
+  <h2 style="text-align: center;">Email Verification Required</h2>
+
+  <div style="text-align: center; margin-bottom: 1.5rem;">
+    <p>You need to verify your email address before accessing this feature.</p>
+    <p><strong>{{ email }}</strong></p>
+  </div>
+
+  <div style="text-align: center; margin-bottom: 1.5rem;">
+    <p>Please check your email and click the verification link to continue.</p>
+    <p><small>If you don't see the email, check your spam folder.</small></p>
+  </div>
+
+  <div style="text-align: center; margin-bottom: 1.5rem;">
+    <a href="{% url 'account_email' %}" class="cta-button">Manage Email</a>
+  </div>
+
+  <div style="text-align: center;">
+    <a href="/" class="cta-button secondary">Back to Home</a>
+  </div>
+
+  <p style="text-align: center; margin-top: 1.5rem;">
+    <small>Need help? <a href="{% url 'account_email' %}">Resend verification email</a></small>
+  </p>
+</section>
+{% endblock %}

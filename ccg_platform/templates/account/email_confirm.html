@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Confirm Email{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width: 500px; margin: 2rem auto;">
+  <h2 style="text-align: center;">Confirm Your Email</h2>
+
+  {% if confirmation %}
+    <p style="text-align: center; margin-bottom: 1.5rem;">
+      Please confirm that <strong>{{ confirmation.email_address.email }}</strong> is your email address.
+    </p>
+
+    <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+      {% csrf_token %}
+      <button type="submit" class="cta-button">Confirm Email</button>
+    </form>
+  {% else %}
+    <p style="text-align: center; margin-bottom: 1.5rem;">
+      This confirmation link has expired or is invalid.
+    </p>
+    <div style="text-align: center;">
+      <a href="{% url 'account_email' %}" class="cta-button">Request New Confirmation</a>
+    </div>
+  {% endif %}
+
+  <p style="text-align: center; margin-top: 1.5rem;">
+    <a href="{% url 'account_login' %}">Back to login</a>
+  </p>
+</section>
+{% endblock %}
