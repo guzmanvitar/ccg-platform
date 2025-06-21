@@ -35,6 +35,7 @@ def verification_sent_view(request):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("inference.urls")),
+    path("geoassign/", include("geoassign.urls")),
     # Override allauth verification sent view
     path(
         "accounts/confirm-email/",
