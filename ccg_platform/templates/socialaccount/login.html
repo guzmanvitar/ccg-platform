@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Google Sign In{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width: 500px; margin: 2rem auto;">
+  <h2 style="text-align: center;">Sign In with Google</h2>
+
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <p>You are about to sign in using your Google account.</p>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    {% if redirect_field_value %}
+      <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+    {% endif %}
+    <div style="text-align: center;">
+      <button type="submit" class="cta-button" style="background-color: #4285f4; border-color: #4285f4;">
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" style="width: 18px; height: 18px; margin-right: 8px; vertical-align: middle;">
+        Continue with Google
+      </button>
+    </div>
+  </form>
+
+  <div style="text-align: center; margin-top: 2rem;">
+    <a href="{% url 'account_login' %}" class="cta-button secondary">Back to Login</a>
+  </div>
+</section>
+{% endblock %}

@@ -106,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Allauth settings
-SITE_ID = 1
+SITE_ID = 2  # Use the site with domain 127.0.0.1:8000
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
@@ -131,8 +131,34 @@ ACCOUNT_RATE_LIMITS = {
     "signup": "5/m",
 }
 
+# Social account settings - skip email verification for OAuth users
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_STORE_TOKENS = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
 # Custom allauth adapter
 ACCOUNT_ADAPTER = "inference.adapters.CustomAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "inference.adapters.CustomSocialAccountAdapter"
+
+# Google OAuth redirect URIs to add in Google Cloud Console:
+# http://127.0.0.1:8000/accounts/google/login/callback/
+# http://localhost:8000/accounts/google/login/callback/
+
+# Google OAuth provider settings
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "OAUTH_PKCE_ENABLED": True,
+    }
+}
 
 # Email settings for production (you'll need to configure these)
 # EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP server

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Account Connections{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width: 500px; margin: 2rem auto;">
+  <h2 style="text-align: center;">Account Connections</h2>
+
+  {% if form.accounts %}
+    <p style="text-align: center; margin-bottom: 1.5rem;">
+      You can sign in to your account using any of the following third party accounts:
+    </p>
+
+    <form method="post" action="{% url 'socialaccount_connections' %}">
+      {% csrf_token %}
+
+      <fieldset>
+        {% if form.non_field_errors %}
+          <div style="color: red; margin-bottom: 1rem;">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        {% for base_account in form.accounts %}
+          {% with base_account.get_provider_account as account %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 0.5rem;">
+              <div>
+                <input id="id_account_{{ base_account.id }}" type="radio" name="account" value="{{ base_account.id }}" />
+                <label for="id_account_{{ base_account.id }}">
+                  <span class="socialaccount_provider {{ base_account.provider }} {{ account.get_brand.id }}">
+                    {% if account.get_brand.id == 'google' %}
+                      <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: middle;">
+                    {% endif %}
+                    {{ account }}
+                  </span>
+                </label>
+              </div>
+            </div>
+          {% endwith %}
+        {% endfor %}
+
+        <div style="text-align: center; margin-top: 1.5rem;">
+          <button type="submit" class="cta-button secondary">Remove Selected</button>
+        </div>
+      </fieldset>
+    </form>
+  {% else %}
+    <p style="text-align: center; margin-bottom: 1.5rem;">
+      You currently have no social network accounts connected to this account.
+    </p>
+  {% endif %}
+
+  <h3 style="text-align: center; margin-top: 2rem;">Add a 3rd Party Account</h3>
+
+  <div style="text-align: center; margin-top: 1rem;">
+    <a href="{% provider_login_url 'google' %}" class="cta-button" style="background-color: #4285f4; border-color: #4285f4;">
+      <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" style="width: 18px; height: 18px; margin-right: 8px; vertical-align: middle;">
+      Connect Google Account
+    </a>
+  </div>
+
+  <div style="text-align: center; margin-top: 1.5rem;">
+    <a href="{% url 'account_email' %}" class="cta-button secondary">Back to Account</a>
+  </div>
+</section>
+{% endblock %}
