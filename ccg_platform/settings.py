@@ -38,6 +38,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "inference",
+    "django.contrib.sites",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
 ]
 
 MIDDLEWARE = [
@@ -48,6 +53,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "ccg_platform.urls"
@@ -55,7 +61,7 @@ ROOT_URLCONF = "ccg_platform.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "ccg_platform" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -99,6 +105,68 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Allauth settings
+SITE_ID = 2  # Use the site with domain 127.0.0.1:8000
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+LOGIN_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+
+# Email confirmation settings
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
+ACCOUNT_EMAIL_CONFIRMATION_HMAC = True
+ACCOUNT_RATE_LIMITS = {
+    "confirm_email": "5/m",
+    "reset_password": "5/m",
+    "reset_password_email": "5/m",
+    "signup": "5/m",
+}
+
+# Social account settings - skip email verification for OAuth users
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_STORE_TOKENS = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Custom allauth adapter
+ACCOUNT_ADAPTER = "inference.adapters.CustomAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "inference.adapters.CustomSocialAccountAdapter"
+
+# Google OAuth redirect URIs to add in Google Cloud Console:
+# http://127.0.0.1:8000/accounts/google/login/callback/
+# http://localhost:8000/accounts/google/login/callback/
+
+# Google OAuth provider settings
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "OAUTH_PKCE_ENABLED": True,
+    }
+}
+
+# Email settings for production (you'll need to configure these)
+# EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP server
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
+# DEFAULT_FROM_EMAIL = 'your-email@gmail.com'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
