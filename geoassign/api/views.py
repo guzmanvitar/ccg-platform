@@ -3,7 +3,6 @@ API views for geographic assignment functionality
 """
 
 import logging
-import tempfile
 from pathlib import Path
 
 from django.conf import settings
@@ -68,36 +67,52 @@ class GeographicAssignmentView(APIView):
             logger.info(f"Processing VCF file: {uploaded_file.name}")
             logger.info(f"Species: {species}, SNPs: {num_snps}")
 
-            # Create temporary directory for processing
-            with tempfile.TemporaryDirectory() as temp_dir:
-                temp_path = Path(temp_dir)
+            # Create persistent inference directory structure
+            base_inference_dir = Path(settings.BASE_DIR) / "data" / "inference"
+            base_inference_dir.mkdir(parents=True, exist_ok=True)
 
-                # Save uploaded file
-                vcf_path = temp_path / uploaded_file.name
-                with open(vcf_path, "wb+") as destination:
-                    for chunk in uploaded_file.chunks():
-                        destination.write(chunk)
+            # Create unique inference directory using timestamp and random string
+            import random
+            import string
+            import time
 
-                # Initialize pipeline
-                pipeline = SCATPipeline(species=species, num_snps=num_snps)
+            timestamp = int(time.time())
+            random_suffix = "".join(
+                random.choices(string.ascii_lowercase + string.digits, k=8)
+            )
+            inference_dir = (
+                base_inference_dir / f"inference_{timestamp}_{random_suffix}"
+            )
+            inference_dir.mkdir(parents=True, exist_ok=True)
 
-                # Run the pipeline
-                results_dir = pipeline.run(
-                    test_vcf=str(vcf_path), output_dir=str(temp_path / "results")
-                )
+            temp_path = inference_dir
 
-                # Read and return results
-                results = self._read_scat_results(results_dir)
-                return Response(
-                    {
-                        "status": "success",
-                        "message": (
-                            f"Geographic assignment completed for {species} "
-                            f"with {num_snps} SNPs"
-                        ),
-                        "results": results,
-                    }
-                )
+            # Save uploaded file
+            vcf_path = temp_path / uploaded_file.name
+            with open(vcf_path, "wb+") as destination:
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
+
+            # Initialize pipeline
+            pipeline = SCATPipeline(species=species, num_snps=num_snps)
+
+            # Run the pipeline
+            results_dir = pipeline.run(
+                test_vcf=str(vcf_path), output_dir=str(temp_path / "results")
+            )
+
+            # Read and return results
+            results = self._read_scat_results(results_dir)
+            return Response(
+                {
+                    "status": "success",
+                    "message": (
+                        f"Geographic assignment completed for {species} "
+                        f"with {num_snps} SNPs"
+                    ),
+                    "results": results,
+                }
+            )
 
         except SCATPipelineError as e:
             logger.error(f"SCAT pipeline error: {e}")

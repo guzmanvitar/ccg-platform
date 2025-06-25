@@ -6,4 +6,9 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("panthera-onca/", views.jaguar_tools, name="jaguar_tools"),
     path("upload/", views.upload_data, name="upload_data"),
+    path(
+        "geographic-inference/",
+        views.run_geographic_inference,
+        name="geographic_inference",
+    ),
 ]
