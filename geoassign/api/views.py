@@ -136,57 +136,40 @@ class GeographicAssignmentView(APIView):
 
                 scat_output_files = list(Path(results_dir).glob("*"))
                 scat_output_file = None
-                print(f"DEBUG: Looking for SCAT output files in {results_dir}")
-                print(f"DEBUG: Found files: {[f.name for f in scat_output_files]}")
 
                 # Look for LegadoSP file which contains posterior samples
                 for file_path in scat_output_files:
                     if file_path.is_file() and file_path.name == "LegadoSP":
                         scat_output_file = file_path
-                        print(f"DEBUG: Selected SCAT output file: {scat_output_file}")
                         break
 
                 if scat_output_file:
-                    print(f"DEBUG: Computing credible region from {scat_output_file}")
                     credible_region = compute_credible_region_from_file(
                         scat_output_file
-                    )
-                    print(
-                        f"DEBUG: Credible region computed successfully: {credible_region}"
                     )
                     logger.info(
                         f"Computed credible region with {credible_region['n_samples']} samples"
                     )
                 else:
-                    print(
-                        "DEBUG: No LegadoSP file found for credible region computation"
-                    )
                     logger.warning(
                         "No LegadoSP file found for credible region computation"
                     )
             except Exception as e:
-                print(f"DEBUG: Exception in credible region computation: {e}")
                 logger.warning(f"Failed to compute credible region: {e}")
                 credible_region = None
 
             # Add credible region to results if available and save to file
             if credible_region:
-                print("DEBUG: Adding credible region to results")
                 results["credible_region"] = credible_region
                 credible_region_file = inference_dir / "credible_region.json"
-                print(f"DEBUG: Saving credible region to {credible_region_file}")
                 try:
                     with open(credible_region_file, "w") as f:
                         json.dump(credible_region, f, indent=2)
-                    print(
-                        f"DEBUG: Credible region saved successfully to {credible_region_file}"
-                    )
                     logger.info(f"Saved credible region data to {credible_region_file}")
                 except Exception as e:
-                    print(f"DEBUG: Failed to save credible region: {e}")
                     logger.warning(f"Failed to save credible region data: {e}")
             else:
-                print("DEBUG: No credible region to save")
+                logger.info("No credible region computed")
 
             # Copy the entire inference folder to seafile
             seafile_inference_dir = (
