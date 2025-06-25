@@ -3,6 +3,7 @@ import json
 import logging
 from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -119,6 +120,7 @@ def jaguar_tools(request):
                             "inference_status": inference_status,
                             "can_run_inference": fmt
                             == "vcf",  # Only VCF files can run inference
+                            "file_hash": get_file_hash(f) if fmt == "vcf" else None,
                         }
                     )
 
@@ -261,3 +263,79 @@ def run_geographic_inference(request):
             )
 
     return JsonResponse({"success": False, "error": "Method not allowed"}, status=405)
+
+
+@login_required
+@check_email_verification
+def view_inference_results(request, file_hash):
+    """
+    Display inference results with credible region on Google Maps
+    """
+    try:
+        user = request.user.email
+
+        # Get the inference directory from seafile
+        base_dir = Path.home() / "seafile_drive"
+        inference_dir = (
+            base_dir / "panthera-onca" / "inference" / user / f"inference_{file_hash}"
+        )
+
+        if not inference_dir.exists():
+            return JsonResponse(
+                {"success": False, "error": "Inference results not found"}, status=404
+            )
+
+        # Read credible region data
+        credible_region_file = inference_dir / "credible_region.json"
+        credible_region = None
+
+        if credible_region_file.exists():
+            with open(credible_region_file) as f:
+                credible_region = json.load(f)
+
+        # Get list of result files
+        result_files = []
+        for item in inference_dir.iterdir():
+            if item.is_file():
+                result_files.append(
+                    {
+                        "name": item.name,
+                        "size": item.stat().st_size,
+                        "modified": item.stat().st_mtime,
+                    }
+                )
+
+        # Read Google Maps API key from secrets
+        maps_secret_file = Path(settings.BASE_DIR) / ".secrets" / "gcp_maps_secret.json"
+        maps_api_key = None
+        if maps_secret_file.exists():
+            with open(maps_secret_file) as f:
+                maps_secret = json.load(f)
+                maps_api_key = maps_secret.get("api_key")
+                logger.info(
+                    f"Loaded Google Maps API key: {maps_api_key[:10]}..."
+                    if maps_api_key
+                    else "No API key found"
+                )
+        else:
+            logger.warning(f"Google Maps secret file not found: {maps_secret_file}")
+
+        context = {
+            "file_hash": file_hash,
+            "credible_region": credible_region,
+            "result_files": result_files,
+            "inference_dir": str(inference_dir),
+            "user_email": user,
+            "maps_api_key": maps_api_key,
+        }
+
+        logger.info(
+            f"Rendering results page with API key: {'Present' if maps_api_key else 'Missing'}"
+        )
+        return render(request, "inference/view_results.html", context)
+
+    except Exception as e:
+        logger.error(f"Error viewing inference results: {e}")
+        return JsonResponse(
+            {"success": False, "error": f"Error loading results: {str(e)}"}, status=500
+        )

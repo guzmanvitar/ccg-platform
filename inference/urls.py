@@ -11,4 +11,9 @@ urlpatterns = [
         views.run_geographic_inference,
         name="geographic_inference",
     ),
+    path(
+        "results/<str:file_hash>/",
+        views.view_inference_results,
+        name="view_inference_results",
+    ),
 ]

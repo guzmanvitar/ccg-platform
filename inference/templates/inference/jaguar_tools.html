@@ -48,14 +48,14 @@
         </thead>
         <tbody>
           {% for file in uploaded_files %}
-            <tr data-file-path="{{ file.path }}" data-file-name="{{ file.name }}">
+            <tr data-file-path="{{ file.path }}" data-file-name="{{ file.name }}" data-file-hash="{{ file.file_hash }}">
               <td><strong>{{ file.name }}</strong></td>
               <td><span class="format-badge {{ file.format }}">{{ file.format.upper }}</span></td>
               <td>{{ file.modified|date:"M d, Y H:i" }}</td>
               <td class="inference-status">
                 {% if file.inference_status %}
                   <span class="status-completed">✅ Completed</span>
-                  <button class="btn-small" onclick="viewResults('{{ file.path|stringformat:'s' }}')">View Results</button>
+                  <button class="btn-small" onclick="viewResults('{{ file.file_hash }}')">View Results</button>
                 {% elif file.can_run_inference %}
                   <span class="status-pending">⏳ Not Run</span>
                 {% else %}
@@ -156,14 +156,9 @@
     document.getElementById("inferenceProgressText").textContent = text;
   }
 
-  function viewResults(filePath) {
-    // For now, just show a placeholder
-    document.getElementById("resultsModal").classList.remove("hidden");
-    document.getElementById("resultsContent").innerHTML = `
-      <p><strong>Results for:</strong> ${filePath.split('/').pop()}</p>
-      <p>Results are stored in your inference folder.</p>
-      <p><em>Detailed results viewer coming soon...</em></p>
-    `;
+  function viewResults(fileHash) {
+    // Navigate directly to the results page
+    window.location.href = `/results/${fileHash}/`;
   }
 
   function runInference(filePath, fileName) {
