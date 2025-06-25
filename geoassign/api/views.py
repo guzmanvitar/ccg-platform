@@ -2,6 +2,7 @@
 API views for geographic assignment functionality
 """
 
+import logging
 import tempfile
 from pathlib import Path
 
@@ -12,7 +13,9 @@ from rest_framework.parsers import FileUploadParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..scat.pipeline import SCATPipeline
+from ..scat.pipeline import SCATPipeline, SCATPipelineError
+
+logger = logging.getLogger(__name__)
 
 
 class GeographicAssignmentView(APIView):
@@ -42,12 +45,28 @@ class GeographicAssignmentView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Get species parameter (POST body, form, or query param)
+            # Get species parameter (optional, defaults to panthera_onca)
             species = (
                 request.data.get("species")
                 or request.query_params.get("species")
                 or "panthera_onca"
             )
+
+            # Get num_snps parameter (optional, defaults to 84)
+            try:
+                num_snps = int(
+                    request.data.get("num_snps")
+                    or request.query_params.get("num_snps")
+                    or 84
+                )
+            except (TypeError, ValueError):
+                return Response(
+                    {"error": "num_snps must be a valid integer"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            logger.info(f"Processing VCF file: {uploaded_file.name}")
+            logger.info(f"Species: {species}, SNPs: {num_snps}")
 
             # Create temporary directory for processing
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -59,31 +78,35 @@ class GeographicAssignmentView(APIView):
                     for chunk in uploaded_file.chunks():
                         destination.write(chunk)
 
-                # Initialize pipeline with species
-                pipeline = SCATPipeline(species=species)
+                # Initialize pipeline
+                pipeline = SCATPipeline(species=species, num_snps=num_snps)
 
                 # Run the pipeline
-                results_dir = pipeline.process_vcf_file(
-                    str(vcf_path), output_dir=str(temp_path / "results")
+                results_dir = pipeline.run(
+                    test_vcf=str(vcf_path), output_dir=str(temp_path / "results")
                 )
 
-                if results_dir:
-                    # Read and return results
-                    results = self._read_scat_results(results_dir)
-                    return Response(
-                        {
-                            "status": "success",
-                            "message": f"Geo assignment completed for species: {species}",
-                            "results": results,
-                        }
-                    )
-                else:
-                    return Response(
-                        {"error": "Pipeline failed to complete"},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    )
+                # Read and return results
+                results = self._read_scat_results(results_dir)
+                return Response(
+                    {
+                        "status": "success",
+                        "message": (
+                            f"Geographic assignment completed for {species} "
+                            f"with {num_snps} SNPs"
+                        ),
+                        "results": results,
+                    }
+                )
 
+        except SCATPipelineError as e:
+            logger.error(f"SCAT pipeline error: {e}")
+            return Response(
+                {"error": f"Pipeline error: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except Exception as e:
+            logger.error(f"Unexpected error in geographic assignment: {e}")
             return Response(
                 {"error": f"Processing failed: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -129,6 +152,26 @@ def test_pipeline(request):
     Test endpoint that runs the pipeline with a sample VCF file
     """
     try:
+        # Get species parameter (POST body, form, or query param)
+        species = (
+            request.data.get("species")
+            or request.query_params.get("species")
+            or "panthera_onca"
+        )
+
+        # Get num_snps parameter (optional, defaults to 84)
+        try:
+            num_snps = int(
+                request.data.get("num_snps")
+                or request.query_params.get("num_snps")
+                or 84
+            )
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "num_snps must be a valid integer"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Use the sample VCF file from data directory
         sample_vcf = Path(settings.BASE_DIR) / "data" / "jaguar.57samples.84snps.vcf"
 
@@ -137,36 +180,33 @@ def test_pipeline(request):
                 {"error": "Sample VCF file not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Get species parameter (POST body, form, or query param)
-        species = (
-            request.data.get("species")
-            or request.query_params.get("species")
-            or "panthera_onca"
-        )
+        logger.info(f"Running test pipeline for {species} with {num_snps} SNPs")
 
-        # Initialize pipeline with species
-        pipeline = SCATPipeline(species=species)
+        # Initialize pipeline
+        pipeline = SCATPipeline(species=species, num_snps=num_snps)
 
         # Run with sample file
-        results_dir = pipeline.process_vcf_file(
-            str(sample_vcf), output_dir="test_results"
+        results_dir = pipeline.run(test_vcf=str(sample_vcf), output_dir="test_results")
+
+        return Response(
+            {
+                "status": "success",
+                "message": (
+                    f"Test pipeline completed successfully for {species} "
+                    f"with {num_snps} SNPs"
+                ),
+                "results_directory": results_dir,
+            }
         )
 
-        if results_dir:
-            return Response(
-                {
-                    "status": "success",
-                    "message": f"Test pipeline completed successfully for species: {species}",
-                    "results_directory": results_dir,
-                }
-            )
-        else:
-            return Response(
-                {"error": "Test pipeline failed"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
+    except SCATPipelineError as e:
+        logger.error(f"SCAT pipeline error in test: {e}")
+        return Response(
+            {"error": f"Test pipeline error: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     except Exception as e:
+        logger.error(f"Unexpected error in test pipeline: {e}")
         return Response(
             {"error": f"Test failed: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
