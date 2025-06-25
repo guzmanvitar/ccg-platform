@@ -209,7 +209,7 @@ def run_geographic_inference(request):
 
             mock_request = MockRequest(
                 files={"file": file_obj},
-                data={"species": species, "num_snps": num_snps},
+                data={"species": species, "num_snps": num_snps, "user_email": user},
             )
 
             # Call the geoassign API view
@@ -219,24 +219,6 @@ def run_geographic_inference(request):
             if response.status_code == 200:
                 # Extract data from DRF Response object
                 response_data = response.data
-
-                # Copy results from persistent inference directory to user's seafile directory
-                temp_results_dir = response_data.get("results", {}).get(
-                    "output_directory"
-                )
-                if temp_results_dir and Path(temp_results_dir).exists():
-                    import shutil
-
-                    temp_path = Path(temp_results_dir)
-
-                    # Copy all files from inference directory to user's seafile directory
-                    for item in temp_path.iterdir():
-                        if item.is_file():
-                            shutil.copy2(item, output_dir)
-                        elif item.is_dir():
-                            shutil.copytree(
-                                item, output_dir / item.name, dirs_exist_ok=True
-                            )
 
                 # Save mapping for future reference
                 mapping_file = inference_dir / "file_mapping.json"
@@ -250,18 +232,15 @@ def run_geographic_inference(request):
                 with open(mapping_file, "w") as f:
                     json.dump(mapping, f, indent=2)
 
-                # Success - return the results
+                # Success - return the results from the API
                 return JsonResponse(
                     {
                         "success": True,
                         "message": "Geographic inference completed successfully",
-                        "results": {
-                            "output_directory": str(output_dir),
-                            "files": [
-                                f.name for f in output_dir.iterdir() if f.is_file()
-                            ],
-                            "message": "Results copied to user directory",
-                        },
+                        "results": response_data.get("results", {}),
+                        "seafile_inference_dir": response_data.get(
+                            "seafile_inference_dir", ""
+                        ),
                     }
                 )
             else:

@@ -2,7 +2,9 @@
 API views for geographic assignment functionality
 """
 
+import json
 import logging
+import os
 from pathlib import Path
 
 from django.conf import settings
@@ -67,42 +69,146 @@ class GeographicAssignmentView(APIView):
             logger.info(f"Processing VCF file: {uploaded_file.name}")
             logger.info(f"Species: {species}, SNPs: {num_snps}")
 
-            # Create persistent inference directory structure
-            base_inference_dir = Path(settings.BASE_DIR) / "data" / "inference"
-            base_inference_dir.mkdir(parents=True, exist_ok=True)
-
-            # Create unique inference directory using timestamp and random string
-            import random
-            import string
-            import time
-
-            timestamp = int(time.time())
-            random_suffix = "".join(
-                random.choices(string.ascii_lowercase + string.digits, k=8)
+            # Require user email as a POST parameter or from authenticated user
+            user_email = request.data.get("user_email") or (
+                getattr(request.user, "email", None)
+                if hasattr(request, "user") and request.user.is_authenticated
+                else None
             )
-            inference_dir = (
-                base_inference_dir / f"inference_{timestamp}_{random_suffix}"
-            )
-            inference_dir.mkdir(parents=True, exist_ok=True)
+            if not user_email:
+                logger.error("User email is required for inference folder structure.")
+                return Response(
+                    {"error": "User email is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-            temp_path = inference_dir
+            # Get seafile base directory from POST or use default
+            seafile_base_dir = request.data.get("seafile_base_dir") or str(
+                Path.home() / "seafile_drive"
+            )
+            seafile_base_dir = os.path.expanduser(seafile_base_dir)
 
             # Save uploaded file
-            vcf_path = temp_path / uploaded_file.name
+            vcf_path = Path(settings.BASE_DIR) / "data" / "temp_upload.vcf"
             with open(vcf_path, "wb+") as destination:
                 for chunk in uploaded_file.chunks():
                     destination.write(chunk)
+
+            # Compute file hash for folder naming
+            import hashlib
+
+            hash_md5 = hashlib.md5()
+            with open(vcf_path, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_md5.update(chunk)
+            file_hash = hash_md5.hexdigest()
+            logger.info(f"Computed file hash: {file_hash} for file {vcf_path}")
+
+            # Create persistent inference directory structure matching seafile
+            base_inference_dir = Path(settings.BASE_DIR) / "data" / "inference"
+            species_inference_dir = (
+                base_inference_dir / "panthera-onca" / "inference" / user_email
+            )
+            species_inference_dir.mkdir(parents=True, exist_ok=True)
+            inference_dir = species_inference_dir / f"inference_{file_hash}"
+            inference_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Created inference directory: {inference_dir}")
+
+            # Move uploaded file to inference directory
+            final_vcf_path = inference_dir / uploaded_file.name
+            vcf_path.replace(final_vcf_path)
 
             # Initialize pipeline
             pipeline = SCATPipeline(species=species, num_snps=num_snps)
 
             # Run the pipeline
             results_dir = pipeline.run(
-                test_vcf=str(vcf_path), output_dir=str(temp_path / "results")
+                test_vcf=str(final_vcf_path), output_dir=str(inference_dir / "results")
             )
 
             # Read and return results
             results = self._read_scat_results(results_dir)
+
+            # Compute credible region polygon if SCAT output file exists
+            credible_region = None
+            try:
+                from ..utils.credible_region import compute_credible_region_from_file
+
+                scat_output_files = list(Path(results_dir).glob("*"))
+                scat_output_file = None
+                print(f"DEBUG: Looking for SCAT output files in {results_dir}")
+                print(f"DEBUG: Found files: {[f.name for f in scat_output_files]}")
+
+                # Look for LegadoSP file which contains posterior samples
+                for file_path in scat_output_files:
+                    if file_path.is_file() and file_path.name == "LegadoSP":
+                        scat_output_file = file_path
+                        print(f"DEBUG: Selected SCAT output file: {scat_output_file}")
+                        break
+
+                if scat_output_file:
+                    print(f"DEBUG: Computing credible region from {scat_output_file}")
+                    credible_region = compute_credible_region_from_file(
+                        scat_output_file
+                    )
+                    print(
+                        f"DEBUG: Credible region computed successfully: {credible_region}"
+                    )
+                    logger.info(
+                        f"Computed credible region with {credible_region['n_samples']} samples"
+                    )
+                else:
+                    print(
+                        "DEBUG: No LegadoSP file found for credible region computation"
+                    )
+                    logger.warning(
+                        "No LegadoSP file found for credible region computation"
+                    )
+            except Exception as e:
+                print(f"DEBUG: Exception in credible region computation: {e}")
+                logger.warning(f"Failed to compute credible region: {e}")
+                credible_region = None
+
+            # Add credible region to results if available and save to file
+            if credible_region:
+                print("DEBUG: Adding credible region to results")
+                results["credible_region"] = credible_region
+                credible_region_file = inference_dir / "credible_region.json"
+                print(f"DEBUG: Saving credible region to {credible_region_file}")
+                try:
+                    with open(credible_region_file, "w") as f:
+                        json.dump(credible_region, f, indent=2)
+                    print(
+                        f"DEBUG: Credible region saved successfully to {credible_region_file}"
+                    )
+                    logger.info(f"Saved credible region data to {credible_region_file}")
+                except Exception as e:
+                    print(f"DEBUG: Failed to save credible region: {e}")
+                    logger.warning(f"Failed to save credible region data: {e}")
+            else:
+                print("DEBUG: No credible region to save")
+
+            # Copy the entire inference folder to seafile
+            seafile_inference_dir = (
+                Path(seafile_base_dir)
+                / "panthera-onca"
+                / "inference"
+                / user_email
+                / f"inference_{file_hash}"
+            )
+            seafile_inference_dir.parent.mkdir(parents=True, exist_ok=True)
+            import shutil
+
+            try:
+                if seafile_inference_dir.exists():
+                    shutil.rmtree(seafile_inference_dir)
+                shutil.copytree(inference_dir, seafile_inference_dir)
+                logger.info(
+                    f"Copied inference folder to seafile: {seafile_inference_dir}"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to copy inference folder to seafile: {e}")
+
             return Response(
                 {
                     "status": "success",
@@ -111,6 +217,7 @@ class GeographicAssignmentView(APIView):
                         f"with {num_snps} SNPs"
                     ),
                     "results": results,
+                    "seafile_inference_dir": str(seafile_inference_dir),
                 }
             )
 
